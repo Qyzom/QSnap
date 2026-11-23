@@ -1,0 +1,17 @@
+{
+  "app_title": "QSnap • Viral Split-Screen Video Studio",
+  "tab_templates": "Шаблоны",
+  "tab_media": "Медиатека",
+  "tab_antifraud": "Антифрод",
+  "tab_generator": "Генерация серии",
+  "tab_logs": "Логи",
+  "select_main_video": "Выбрать исходное видео",
+  "select_broll_dir": "Папка с геймплеем (B-roll)",
+  "banner_text": "Текст рекламного баннера",
+  "clip_duration": "Длина ролика (сек)",
+  "clips_count": "Количество клипов",
+  "start_batch": "Запустить нарезку серии",
+  "status_idle": "Готов к работе",
+  "status_rendering": "Рендеринг...",
+  "status_done": "Готово! Все ролики сохранены"
+}

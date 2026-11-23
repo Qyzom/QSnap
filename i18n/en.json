@@ -1,0 +1,17 @@
+{
+  "app_title": "QSnap • Viral Split-Screen Video Studio",
+  "tab_templates": "Templates",
+  "tab_media": "Media Library",
+  "tab_antifraud": "Anti-Fraud",
+  "tab_generator": "Batch Generator",
+  "tab_logs": "Logs",
+  "select_main_video": "Select Source Video",
+  "select_broll_dir": "B-roll Gameplay Folder",
+  "banner_text": "Ad Banner Text",
+  "clip_duration": "Clip Duration (sec)",
+  "clips_count": "Number of Clips",
+  "start_batch": "Start Batch Rendering",
+  "status_idle": "Ready",
+  "status_rendering": "Rendering...",
+  "status_done": "Done! All clips exported"
+}

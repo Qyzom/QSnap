@@ -1,0 +1,627 @@
+import { ScrollView, LineEdit, Button, Slider } from "std-widgets.slint";
+import "./fonts/Unbounded.ttf";
+
+export struct LogItem {
+    time: string,
+    message: string,
+    level: string,
+}
+
+export component AppWindow inherits Window {
+    title: "QSnap • Viral Video Studio & Anti-Fraud Clipper";
+    preferred-width: 1080px;
+    preferred-height: 720px;
+    min-width: 900px;
+    min-height: 600px;
+    background: #0B0E17;
+    default-font-family: "Unbounded";
+
+    // Callbacks to Rust
+    callback start_batch_render();
+    callback select_source_video();
+    callback select_broll_folder();
+    callback select_output_folder();
+    callback save_template();
+
+    // State properties
+    in-out property <int> active_tab: 0;
+    in-out property <string> source_video_path: "";
+    in-out property <string> broll_folder_path: "";
+    in-out property <string> output_folder_path: "";
+    in-out property <string> banner_text: "🔥 Подпишись • Промокод: BONUS2026";
+    in-out property <int> clip_duration_secs: 45;
+    in-out property <int> clips_count: 10;
+    
+    // Anti-fraud switches
+    in-out property <bool> af_speed: true;
+    in-out property <bool> af_pitch: true;
+    in-out property <bool> af_zoom: true;
+    in-out property <bool> af_grain: true;
+    in-out property <bool> af_metadata: true;
+
+    // Progress & Status
+    in-out property <bool> is_rendering: false;
+    in-out property <float> progress_percent: 0.0;
+    in-out property <string> status_text: "Готов к нарезке";
+
+    // Logs
+    in-out property <[LogItem]> logs: [
+        { time: "00:00:01", message: "QSnap Studio 0.1.0 запущена. Движок FFmpeg активен.", level: "INFO" },
+    ];
+
+    HorizontalLayout {
+        padding: 0px;
+        spacing: 0px;
+
+        // ==================== LEFT SIDEBAR ====================
+        Rectangle {
+            width: 250px;
+            background: #111422;
+
+            VerticalLayout {
+                padding: 20px;
+                spacing: 16px;
+
+                // Header Logo
+                HorizontalLayout {
+                    spacing: 12px;
+                    alignment: start;
+                    Image {
+                        source: @image-url("images/logo.png");
+                        width: 44px;
+                        height: 44px;
+                    }
+                    VerticalLayout {
+                        alignment: center;
+                        Text {
+                            text: "QSnap";
+                            font-size: 20px;
+                            font-weight: 800;
+                            color: #00F0FF;
+                        }
+                        Text {
+                            text: "CLIPPER STUDIO";
+                            font-size: 9px;
+                            font-weight: 700;
+                            letter-spacing: 1.5px;
+                            color: #A855F7;
+                        }
+                    }
+                }
+
+                Rectangle { height: 1px; background: #232840; }
+
+                // Navigation Buttons
+                VerticalLayout {
+                    spacing: 8px;
+
+                    // Tab 0: Generator
+                    Rectangle {
+                        height: 44px;
+                        border-radius: 8px;
+                        background: root.active_tab == 0 ? #1E233B : transparent;
+                        border-width: root.active_tab == 0 ? 1px : 0px;
+                        border-color: #00F0FF;
+                        TouchArea { clicked => { root.active_tab = 0; } }
+                        Text {
+                            x: 16px;
+                            y: 13px;
+                            text: "⚡ Генерация серии";
+                            color: root.active_tab == 0 ? #00F0FF : #94A3B8;
+                            font-size: 13px;
+                            font-weight: 600;
+                        }
+                    }
+
+                    // Tab 1: Template
+                    Rectangle {
+                        height: 44px;
+                        border-radius: 8px;
+                        background: root.active_tab == 1 ? #1E233B : transparent;
+                        border-width: root.active_tab == 1 ? 1px : 0px;
+                        border-color: #00F0FF;
+                        TouchArea { clicked => { root.active_tab = 1; } }
+                        Text {
+                            x: 16px;
+                            y: 13px;
+                            text: "📐 Редактор шаблона";
+                            color: root.active_tab == 1 ? #00F0FF : #94A3B8;
+                            font-size: 13px;
+                            font-weight: 600;
+                        }
+                    }
+
+                    // Tab 2: Anti-Fraud
+                    Rectangle {
+                        height: 44px;
+                        border-radius: 8px;
+                        background: root.active_tab == 2 ? #1E233B : transparent;
+                        border-width: root.active_tab == 2 ? 1px : 0px;
+                        border-color: #00F0FF;
+                        TouchArea { clicked => { root.active_tab = 2; } }
+                        Text {
+                            x: 16px;
+                            y: 13px;
+                            text: "🛡️ Антифрод / Уникализация";
+                            color: root.active_tab == 2 ? #00F0FF : #94A3B8;
+                            font-size: 13px;
+                            font-weight: 600;
+                        }
+                    }
+
+                    // Tab 3: Logs
+                    Rectangle {
+                        height: 44px;
+                        border-radius: 8px;
+                        background: root.active_tab == 3 ? #1E233B : transparent;
+                        border-width: root.active_tab == 3 ? 1px : 0px;
+                        border-color: #00F0FF;
+                        TouchArea { clicked => { root.active_tab = 3; } }
+                        Text {
+                            x: 16px;
+                            y: 13px;
+                            text: "📜 Консоль и логи";
+                            color: root.active_tab == 3 ? #00F0FF : #94A3B8;
+                            font-size: 13px;
+                            font-weight: 600;
+                        }
+                    }
+                }
+
+                Rectangle { height: 100%; } // Spacer
+
+                // Bottom engine status pill
+                Rectangle {
+                    height: 52px;
+                    border-radius: 8px;
+                    background: #181C2E;
+                    border-width: 1px;
+                    border-color: #272F4D;
+                    HorizontalLayout {
+                        padding-left: 12px;
+                        padding-right: 12px;
+                        spacing: 8px;
+                        alignment: center;
+                        Rectangle {
+                            width: 8px;
+                            height: 8px;
+                            border-radius: 4px;
+                            background: root.is_rendering ? #FFB800 : #10B981;
+                        }
+                        Text {
+                            text: root.is_rendering ? "Идет нарезка" : "Готов к работе";
+                            color: #94A3B8;
+                            font-size: 11px;
+                        }
+                    }
+                }
+            }
+        }
+
+        // ==================== MAIN CONTENT AREA ====================
+        Rectangle {
+            background: #0B0E17;
+
+            VerticalLayout {
+                padding: 24px;
+                spacing: 20px;
+
+                // Tab 0: BATCH GENERATOR PAGE
+                if root.active_tab == 0 : VerticalLayout {
+                    spacing: 16px;
+
+                    Text {
+                        text: "Пакетная нарезка серии роликов";
+                        font-size: 20px;
+                        font-weight: 700;
+                        color: #FFFFFF;
+                    }
+
+                    // Source Video Selector Card
+                    Rectangle {
+                        height: 80px;
+                        background: #141829;
+                        border-radius: 10px;
+                        border-width: 1px;
+                        border-color: #232A45;
+                        padding: 14px;
+                        HorizontalLayout {
+                            spacing: 16px;
+                            VerticalLayout {
+                                alignment: center;
+                                spacing: 4px;
+                                Text {
+                                    text: "🎬 Исходный фильм / сериал / мультик:";
+                                    font-size: 12px;
+                                    color: #94A3B8;
+                                }
+                                Text {
+                                    text: root.source_video_path != "" ? root.source_video_path : "Файл не выбран (нажмите для выбора)";
+                                    font-size: 13px;
+                                    font-weight: 600;
+                                    color: root.source_video_path != "" ? #00F0FF : #64748B;
+                                    overflow: elide;
+                                }
+                            }
+                            Rectangle {
+                                width: 140px;
+                                height: 42px;
+                                border-radius: 8px;
+                                background: #232A45;
+                                TouchArea { clicked => { root.select_source_video(); } }
+                                Text {
+                                    x: 20px;
+                                    y: 12px;
+                                    text: "Выбрать файл";
+                                    font-size: 12px;
+                                    color: #FFFFFF;
+                                    font-weight: 600;
+                                }
+                            }
+                        }
+                    }
+
+                    // B-Roll Gameplay Folder Card
+                    Rectangle {
+                        height: 80px;
+                        background: #141829;
+                        border-radius: 10px;
+                        border-width: 1px;
+                        border-color: #232A45;
+                        padding: 14px;
+                        HorizontalLayout {
+                            spacing: 16px;
+                            VerticalLayout {
+                                alignment: center;
+                                spacing: 4px;
+                                Text {
+                                    text: "🎮 Папка с удерживающим B-roll геймплеем (Игры, анимация, динамика):";
+                                    font-size: 12px;
+                                    color: #94A3B8;
+                                }
+                                Text {
+                                    text: root.broll_folder_path != "" ? root.broll_folder_path : "Папка не выбрана";
+                                    font-size: 13px;
+                                    font-weight: 600;
+                                    color: root.broll_folder_path != "" ? #A855F7 : #64748B;
+                                    overflow: elide;
+                                }
+                            }
+                            Rectangle {
+                                width: 140px;
+                                height: 42px;
+                                border-radius: 8px;
+                                background: #232A45;
+                                TouchArea { clicked => { root.select_broll_folder(); } }
+                                Text {
+                                    x: 20px;
+                                    y: 12px;
+                                    text: "Выбрать папку";
+                                    font-size: 12px;
+                                    color: #FFFFFF;
+                                    font-weight: 600;
+                                }
+                            }
+                        }
+                    }
+
+                    // Settings: Clips count & duration
+                    HorizontalLayout {
+                        spacing: 16px;
+
+                        Rectangle {
+                            height: 70px;
+                            background: #141829;
+                            border-radius: 10px;
+                            border-width: 1px;
+                            border-color: #232A45;
+                            padding: 12px;
+                            VerticalLayout {
+                                spacing: 4px;
+                                Text { text: "Количество клипов в серии:"; font-size: 11px; color: #94A3B8; }
+                                LineEdit {
+                                    text: root.clips_count;
+                                    font-size: 14px;
+                                    edited(val) => { root.clips_count = 10; }
+                                }
+                            }
+                        }
+
+                        Rectangle {
+                            height: 70px;
+                            background: #141829;
+                            border-radius: 10px;
+                            border-width: 1px;
+                            border-color: #232A45;
+                            padding: 12px;
+                            VerticalLayout {
+                                spacing: 4px;
+                                Text { text: "Длительность клипа (сек):"; font-size: 11px; color: #94A3B8; }
+                                LineEdit {
+                                    text: root.clip_duration_secs;
+                                    font-size: 14px;
+                                    edited(val) => { root.clip_duration_secs = 45; }
+                                }
+                            }
+                        }
+                    }
+
+                    // Banner Text Quick Edit
+                    Rectangle {
+                        height: 70px;
+                        background: #141829;
+                        border-radius: 10px;
+                        border-width: 1px;
+                        border-color: #232A45;
+                        padding: 12px;
+                        VerticalLayout {
+                            spacing: 4px;
+                            Text { text: "Текст рекламного разделителя:"; font-size: 11px; color: #94A3B8; }
+                            LineEdit {
+                                text: root.banner_text;
+                                font-size: 13px;
+                                edited(val) => { root.banner_text = val; }
+                            }
+                        }
+                    }
+
+                    Rectangle { height: 10px; }
+
+                    // Progress bar
+                    Rectangle {
+                        height: 12px;
+                        border-radius: 6px;
+                        background: #1A1E33;
+                        Rectangle {
+                            x: 0px;
+                            y: 0px;
+                            width: root.progress_percent * parent.width;
+                            height: parent.height;
+                            border-radius: 6px;
+                            background: #00F0FF;
+                        }
+                    }
+
+                    Text {
+                        text: root.status_text;
+                        font-size: 12px;
+                        color: #94A3B8;
+                        horizontal-alignment: center;
+                    }
+
+                    // Big Action Button
+                    Rectangle {
+                        height: 54px;
+                        border-radius: 10px;
+                        background: root.is_rendering ? #2D3748 : #00F0FF;
+                        TouchArea {
+                            clicked => {
+                                if (!root.is_rendering) {
+                                    root.start_batch_render();
+                                }
+                            }
+                        }
+                        Text {
+                            text: root.is_rendering ? "⏳ Идет рендеринг видеосерии..." : "🚀 ЗАПУСТИТЬ НАРЕЗКУ И УНИКАЛИЗАЦИЮ";
+                            font-size: 14px;
+                            font-weight: 800;
+                            color: root.is_rendering ? #A0AEC0 : #0B0E17;
+                            x: (parent.width - self.width) / 2;
+                            y: (parent.height - self.height) / 2;
+                        }
+                    }
+                }
+
+                // Tab 1: TEMPLATE EDITOR PAGE
+                if root.active_tab == 1 : VerticalLayout {
+                    spacing: 16px;
+                    Text { text: "Редактор шаблона Split-Screen"; font-size: 20px; font-weight: 700; color: #FFFFFF; }
+                    
+                    HorizontalLayout {
+                        spacing: 20px;
+
+                        // Canvas Visual 9:16 Mockup
+                        Rectangle {
+                            width: 220px;
+                            height: 390px;
+                            background: #000000;
+                            border-radius: 14px;
+                            border-width: 2px;
+                            border-color: #00F0FF;
+
+                            VerticalLayout {
+                                padding: 4px;
+                                spacing: 0px;
+
+                                // Top layer (Content)
+                                Rectangle {
+                                    height: 180px;
+                                    background: #1E233B;
+                                    border-radius: 10px;
+                                    Text {
+                                        text: "🎬 ОСНОВНОЙ КОНТЕНТ\n(Фильм / Сериал)\n50% высоты";
+                                        font-size: 10px;
+                                        color: #00F0FF;
+                                        horizontal-alignment: center;
+                                        y: 70px;
+                                    }
+                                }
+
+                                // Center Banner
+                                Rectangle {
+                                    height: 34px;
+                                    background: #000000;
+                                    border-width: 1px;
+                                    border-color: #A855F7;
+                                    Text {
+                                        text: root.banner_text;
+                                        font-size: 8px;
+                                        font-weight: 700;
+                                        color: #FFFFFF;
+                                        horizontal-alignment: center;
+                                        overflow: elide;
+                                        y: 10px;
+                                    }
+                                }
+
+                                // Bottom layer (Retention Gameplay)
+                                Rectangle {
+                                    height: 170px;
+                                    background: #141829;
+                                    border-radius: 10px;
+                                    Text {
+                                        text: "🎮 B-ROLL / ГЕЙМПЛЕЙ\n(Динамичный видеоряд)\n50% высоты";
+                                        font-size: 10px;
+                                        color: #A855F7;
+                                        horizontal-alignment: center;
+                                        y: 65px;
+                                    }
+                                }
+                            }
+                        }
+
+                        // Right configuration controls
+                        VerticalLayout {
+                            spacing: 14px;
+
+                            Rectangle {
+                                height: 75px;
+                                background: #141829;
+                                border-radius: 10px;
+                                padding: 12px;
+                                VerticalLayout {
+                                    spacing: 4px;
+                                    Text { text: "Текст центрального баннера:"; font-size: 12px; color: #94A3B8; }
+                                    LineEdit {
+                                        text: root.banner_text;
+                                        font-size: 13px;
+                                        edited(val) => { root.banner_text = val; }
+                                    }
+                                }
+                            }
+
+                            Rectangle {
+                                height: 75px;
+                                background: #141829;
+                                border-radius: 10px;
+                                padding: 12px;
+                                VerticalLayout {
+                                    spacing: 4px;
+                                    Text { text: "Разрешение холста:"; font-size: 12px; color: #94A3B8; }
+                                    Text { text: "1080 x 1920 (Формат 9:16 Shorts / TikTok / Reels)"; font-size: 13px; font-weight: 700; color: #00F0FF; }
+                                }
+                            }
+
+                            Rectangle {
+                                height: 75px;
+                                background: #141829;
+                                border-radius: 10px;
+                                padding: 12px;
+                                VerticalLayout {
+                                    spacing: 4px;
+                                    Text { text: "Шрифт субтитров и баннера:"; font-size: 12px; color: #94A3B8; }
+                                    Text { text: "Unbounded Bold (встроен в QSnap)"; font-size: 13px; font-weight: 700; color: #A855F7; }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Tab 2: ANTI-FRAUD SETTINGS PAGE
+                if root.active_tab == 2 : VerticalLayout {
+                    spacing: 16px;
+                    Text { text: "Настройки алгоритмов антифрода и уникализации"; font-size: 20px; font-weight: 700; color: #FFFFFF; }
+                    Text { text: "Эти фильтры изменяют цифровой хэш каждого ролика в серии, предотвращая блокировку и shadowban."; font-size: 12px; color: #94A3B8; }
+
+                    VerticalLayout {
+                        spacing: 10px;
+
+                        Rectangle {
+                            height: 60px;
+                            background: #141829;
+                            border-radius: 8px;
+                            padding: 14px;
+                            HorizontalLayout {
+                                alignment: space-between;
+                                Text { text: "⚡ Микро-ускорение видео (1.01x – 1.04x)"; font-size: 13px; color: #FFFFFF; y: 6px; }
+                                Text { text: root.af_speed ? "АКТИВНО" : "ОТКЛЮЧЕНО"; color: root.af_speed ? #00F0FF : #64748B; font-weight: 700; font-size: 12px; y: 6px; }
+                            }
+                        }
+
+                        Rectangle {
+                            height: 60px;
+                            background: #141829;
+                            border-radius: 8px;
+                            padding: 14px;
+                            HorizontalLayout {
+                                alignment: space-between;
+                                Text { text: "🎵 Сдвиг аудио-питча (Pitch Jitter)"; font-size: 13px; color: #FFFFFF; y: 6px; }
+                                Text { text: root.af_pitch ? "АКТИВНО" : "ОТКЛЮЧЕНО"; color: root.af_pitch ? #00F0FF : #64748B; font-weight: 700; font-size: 12px; y: 6px; }
+                            }
+                        }
+
+                        Rectangle {
+                            height: 60px;
+                            background: #141829;
+                            border-radius: 8px;
+                            padding: 14px;
+                            HorizontalLayout {
+                                alignment: space-between;
+                                Text { text: "🔍 Микро-зум и случайный кроп (2-4%)"; font-size: 13px; color: #FFFFFF; y: 6px; }
+                                Text { text: root.af_zoom ? "АКТИВНО" : "ОТКЛЮЧЕНО"; color: root.af_zoom ? #00F0FF : #64748B; font-weight: 700; font-size: 12px; y: 6px; }
+                            }
+                        }
+
+                        Rectangle {
+                            height: 60px;
+                            background: #141829;
+                            border-radius: 8px;
+                            padding: 14px;
+                            HorizontalLayout {
+                                alignment: space-between;
+                                Text { text: "📺 Добавление легкого цифрового шума (Grain)"; font-size: 13px; color: #FFFFFF; y: 6px; }
+                                Text { text: root.af_grain ? "АКТИВНО" : "ОТКЛЮЧЕНО"; color: root.af_grain ? #00F0FF : #64748B; font-weight: 700; font-size: 12px; y: 6px; }
+                            }
+                        }
+
+                        Rectangle {
+                            height: 60px;
+                            background: #141829;
+                            border-radius: 8px;
+                            padding: 14px;
+                            HorizontalLayout {
+                                alignment: space-between;
+                                Text { text: "🧹 Полная очистка метаданных (-map_metadata -1)"; font-size: 13px; color: #FFFFFF; y: 6px; }
+                                Text { text: root.af_metadata ? "АКТИВНО" : "ОТКЛЮЧЕНО"; color: root.af_metadata ? #00F0FF : #64748B; font-weight: 700; font-size: 12px; y: 6px; }
+                            }
+                        }
+                    }
+                }
+
+                // Tab 3: LOGS PAGE
+                if root.active_tab == 3 : VerticalLayout {
+                    spacing: 12px;
+                    Text { text: "Консоль событий и рендеринга"; font-size: 20px; font-weight: 700; color: #FFFFFF; }
+
+                    Rectangle {
+                        background: #06080F;
+                        border-radius: 8px;
+                        border-width: 1px;
+                        border-color: #1A213B;
+                        ScrollView {
+                            VerticalLayout {
+                                padding: 12px;
+                                spacing: 8px;
+                                for item in root.logs: HorizontalLayout {
+                                    spacing: 10px;
+                                    Text { text: item.time; font-size: 11px; color: #64748B; width: 70px; }
+                                    Text { text: item.message; font-size: 11px; color: #00F0FF; }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
