@@ -1,6 +1,7 @@
 use log::{error, info};
 use qsnap::antifraud::AntiFraudConfig;
 use qsnap::config::AppConfig;
+use qsnap::media::detector::SceneDetector;
 use qsnap::media::MediaManager;
 use qsnap::render::{RenderEngine, RenderJob};
 use qsnap::templates::schema::LayoutTemplate;
@@ -29,7 +30,7 @@ async fn main() -> anyhow::Result<()> {
         tokio::spawn(async move {
             let file = rfd::AsyncFileDialog::new()
                 .add_filter("Video", &["mp4", "mkv", "mov", "avi", "webm"])
-                .set_title("Выберите исходный фильм или мультфильм")
+                .set_title("Выберите исходный видеофайл")
                 .pick_file()
                 .await;
 
@@ -50,7 +51,7 @@ async fn main() -> anyhow::Result<()> {
         let handle = weak_clone.clone();
         tokio::spawn(async move {
             let folder = rfd::AsyncFileDialog::new()
-                .set_title("Выберите папку с фоновыми геймплеями (B-roll)")
+                .set_title("Выберите каталог с B-roll видеорядом")
                 .pick_folder()
                 .await;
 
@@ -62,6 +63,70 @@ async fn main() -> anyhow::Result<()> {
                     }
                 });
             }
+        });
+    });
+
+    // Generate Preview Frame Callback
+    let weak_clone = app_weak.clone();
+    app.on_generate_preview(move || {
+        let ui = match weak_clone.upgrade() {
+            Some(u) => u,
+            None => return,
+        };
+
+        let source_path_str = ui.get_source_video_path().to_string();
+        let broll_folder_str = ui.get_broll_folder_path().to_string();
+        let banner_text = ui.get_banner_text().to_string();
+
+        if source_path_str.trim().is_empty() {
+            ui.set_preview_status("Ошибка: укажите исходное видео".into());
+            return;
+        }
+
+        let main_path = PathBuf::from(source_path_str);
+        if !main_path.exists() {
+            ui.set_preview_status("Файл не найден".into());
+            return;
+        }
+
+        ui.set_preview_status("Формирование тестового кадра...".into());
+
+        let h = weak_clone.clone();
+        tokio::spawn(async move {
+            let cache_dir = dirs::cache_dir()
+                .unwrap_or_else(|| PathBuf::from("."))
+                .join("qsnap");
+            let _ = std::fs::create_dir_all(&cache_dir);
+            let preview_path = cache_dir.join("preview.jpg");
+
+            let broll_path = if !broll_folder_str.trim().is_empty() {
+                let brolls = MediaManager::scan_directory(&PathBuf::from(&broll_folder_str));
+                brolls.first().map(|m| m.path.clone()).unwrap_or_else(|| main_path.clone())
+            } else {
+                main_path.clone()
+            };
+
+            let mut tmpl = LayoutTemplate::default();
+            tmpl.banner.text = banner_text;
+            let font = PathBuf::from("ui/fonts/Unbounded.ttf");
+
+            let res = RenderEngine::render_preview_frame(
+                &main_path,
+                &broll_path,
+                2.0,
+                &tmpl,
+                if font.exists() { Some(&font) } else { None },
+                &preview_path,
+            );
+
+            let _ = slint::invoke_from_event_loop(move || {
+                if let Some(ui) = h.upgrade() {
+                    match res {
+                        Ok(_) => ui.set_preview_status(format!("Кадр сохранен: {}", preview_path.display()).into()),
+                        Err(e) => ui.set_preview_status(format!("Ошибка: {}", e).into()),
+                    }
+                }
+            });
         });
     });
 
@@ -78,6 +143,7 @@ async fn main() -> anyhow::Result<()> {
         let banner_text = ui.get_banner_text().to_string();
         let clip_duration = ui.get_clip_duration_secs() as f64;
         let clips_count = ui.get_clips_count() as usize;
+        let snap_scenes = ui.get_snap_to_scenes();
 
         if source_path_str.trim().is_empty() {
             ui.set_status_text("Ошибка: выберите исходный видеофайл".into());
@@ -105,6 +171,10 @@ async fn main() -> anyhow::Result<()> {
             info!("Starting batch generation task...");
             let main_duration = MediaManager::probe_duration(&main_path).unwrap_or(300.0);
 
+            // Hardware acceleration check
+            let is_nvenc = RenderEngine::is_nvenc_available();
+            info!("Rendering engine hardware profile: NVENC={}", is_nvenc);
+
             // Scan b-roll folder
             let broll_dir = PathBuf::from(&broll_folder_str);
             let brolls = if broll_dir.exists() {
@@ -116,7 +186,6 @@ async fn main() -> anyhow::Result<()> {
             let broll_path = if let Some(first) = brolls.first() {
                 first.path.clone()
             } else {
-                // If no B-roll provided, reuse main video as retention mirror
                 main_path.clone()
             };
 
@@ -126,17 +195,28 @@ async fn main() -> anyhow::Result<()> {
             let antifraud = AntiFraudConfig::default();
             let font_path = PathBuf::from("ui/fonts/Unbounded.ttf");
 
-            let step = (main_duration - clip_duration) / (clips_count as f64).max(1.0);
+            // Calculate ranges (smart scene detection vs linear step)
+            let clip_ranges = if snap_scenes {
+                let scenes = SceneDetector::detect_scene_changes(&main_path, 0.35).unwrap_or_default();
+                SceneDetector::calculate_clip_ranges(main_duration, clip_duration, clips_count, &scenes)
+            } else {
+                let step = (main_duration - clip_duration) / (clips_count as f64).max(1.0);
+                (0..clips_count)
+                    .map(|i| ((i as f64) * step.max(0.0), clip_duration))
+                    .collect()
+            };
 
-            for i in 0..clips_count {
-                let start_time = (i as f64) * step.max(0.0);
-                let out_file = output_dir.join(format!("qsnap_clip_{:02}.mp4", i + 1));
+            let actual_count = clip_ranges.len();
+
+            for (idx, (start_time, dur)) in clip_ranges.into_iter().enumerate() {
+                let cur_idx = idx + 1;
+                let out_file = output_dir.join(format!("qsnap_clip_{:02}.mp4", cur_idx));
 
                 let job = RenderJob {
                     main_video_path: main_path.clone(),
                     broll_video_path: broll_path.clone(),
                     start_time_secs: start_time,
-                    duration_secs: clip_duration,
+                    duration_secs: dur,
                     output_path: out_file.clone(),
                     template: template.clone(),
                     antifraud: antifraud.clone(),
@@ -147,14 +227,13 @@ async fn main() -> anyhow::Result<()> {
                     },
                 };
 
-                let cur_idx = i + 1;
                 let h = ui_handle.clone();
                 let _ = slint::invoke_from_event_loop(move || {
                     if let Some(ui) = h.upgrade() {
                         ui.set_status_text(
-                            format!("Рендеринг клипа {} из {}...", cur_idx, clips_count).into(),
+                            format!("Рендеринг клипа {} из {} (время: {:.1}с)...", cur_idx, actual_count, dur).into(),
                         );
-                        ui.set_progress_percent((cur_idx as f32) / (clips_count as f32));
+                        ui.set_progress_percent((cur_idx as f32) / (actual_count as f32));
                     }
                 });
 
@@ -163,7 +242,7 @@ async fn main() -> anyhow::Result<()> {
 
                 match res {
                     Ok(Ok(filters)) => {
-                        info!("Clip {} rendered: speed={:.2}x", cur_idx, filters.speed_factor);
+                        info!("Clip {} rendered: speed={:.2}x, nvenc={}", cur_idx, filters.speed_factor, is_nvenc);
                     }
                     Ok(Err(e)) => {
                         error!("Clip {} failed: {}", cur_idx, e);

@@ -22,6 +22,7 @@ export component AppWindow inherits Window {
     callback select_broll_folder();
     callback select_output_folder();
     callback save_template();
+    callback generate_preview();
 
     // State properties
     in-out property <int> active_tab: 0;
@@ -31,6 +32,8 @@ export component AppWindow inherits Window {
     in-out property <string> banner_text: "Подпишись • Промокод: BONUS2026";
     in-out property <int> clip_duration_secs: 45;
     in-out property <int> clips_count: 10;
+    in-out property <bool> snap_to_scenes: true;
+    in-out property <string> preview_status: "Предпросмотр не сформирован";
     
     // Anti-fraud switches
     in-out property <bool> af_speed: true;
@@ -546,6 +549,30 @@ export component AppWindow inherits Window {
                                     Text { text: "Шрифт субтитров и баннера:"; font-size: 12px; color: #A1A1AA; }
                                     Text { text: "Unbounded Bold"; font-size: 13px; font-weight: 700; color: #FFFFFF; }
                                 }
+                            }
+
+                            // Preview generation button
+                            Rectangle {
+                                height: 46px;
+                                border-radius: 8px;
+                                background: #27272A;
+                                border-width: 1px;
+                                border-color: #3F3F46;
+                                TouchArea { clicked => { root.generate_preview(); } }
+                                Text {
+                                    text: "Тестовый рендер 1 кадра";
+                                    font-size: 12px;
+                                    font-weight: 700;
+                                    color: #FFFFFF;
+                                    x: (parent.width - self.width) / 2;
+                                    y: (parent.height - self.height) / 2;
+                                }
+                            }
+
+                            Text {
+                                text: root.preview_status;
+                                font-size: 11px;
+                                color: #A1A1AA;
                             }
                         }
                     }
