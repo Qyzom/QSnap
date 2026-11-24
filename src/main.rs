@@ -4,6 +4,7 @@ use qsnap::config::AppConfig;
 use qsnap::media::detector::SceneDetector;
 use qsnap::media::MediaManager;
 use qsnap::render::{RenderEngine, RenderJob};
+use qsnap::stt::STTManager;
 use qsnap::templates::schema::LayoutTemplate;
 use slint::ComponentHandle;
 use std::path::PathBuf;
@@ -20,6 +21,13 @@ async fn main() -> anyhow::Result<()> {
 
     // Default paths
     app.set_output_folder_path(config.output_dir.to_string_lossy().to_string().into());
+
+    // Check if default tiny model exists
+    let default_tiny = STTManager::tiny_model_path();
+    if default_tiny.exists() {
+        app.set_stt_model_path(default_tiny.to_string_lossy().to_string().into());
+        app.set_stt_status_text("Встроенная модель tiny активна".into());
+    }
 
     let app_weak = app.as_weak();
 
@@ -62,6 +70,67 @@ async fn main() -> anyhow::Result<()> {
                         ui.set_broll_folder_path(path.into());
                     }
                 });
+            }
+        });
+    });
+
+    // Select STT Model Callback
+    let weak_clone = app_weak.clone();
+    app.on_select_stt_model(move || {
+        let handle = weak_clone.clone();
+        tokio::spawn(async move {
+            let file = rfd::AsyncFileDialog::new()
+                .add_filter("Whisper Model", &["bin"])
+                .set_title("Выберите файл Whisper модели (.bin)")
+                .pick_file()
+                .await;
+
+            if let Some(file) = file {
+                let path = file.path().to_string_lossy().to_string();
+                let filename = file.file_name();
+                let _ = slint::invoke_from_event_loop(move || {
+                    if let Some(ui) = handle.upgrade() {
+                        ui.set_stt_model_path(path.into());
+                        ui.set_stt_status_text(format!("Модель: {}", filename).into());
+                        ui.set_stt_enabled(true);
+                    }
+                });
+            }
+        });
+    });
+
+    // Download STT Model Callback
+    let weak_clone = app_weak.clone();
+    app.on_download_stt_model(move || {
+        let handle = weak_clone.clone();
+        tokio::spawn(async move {
+            let _ = slint::invoke_from_event_loop({
+                let h = handle.clone();
+                move || {
+                    if let Some(ui) = h.upgrade() {
+                        ui.set_stt_status_text("Скачивание ggml-tiny.bin (~75 МБ)...".into());
+                    }
+                }
+            });
+
+            match STTManager::download_tiny_model().await {
+                Ok(path) => {
+                    let _ = slint::invoke_from_event_loop(move || {
+                        if let Some(ui) = handle.upgrade() {
+                            ui.set_stt_model_path(path.to_string_lossy().to_string().into());
+                            ui.set_stt_status_text("Модель tiny успешно установлена".into());
+                            ui.set_stt_enabled(true);
+                        }
+                    });
+                }
+                Err(e) => {
+                    error!("Model download failed: {}", e);
+                    let _ = slint::invoke_from_event_loop(move || {
+                        if let Some(ui) = handle.upgrade() {
+                            ui.set_stt_status_text(format!("Ошибка скачивания: {}", e).into());
+                        }
+                    });
+                }
             }
         });
     });
@@ -145,6 +214,25 @@ async fn main() -> anyhow::Result<()> {
         let clips_count = ui.get_clips_count() as usize;
         let snap_scenes = ui.get_snap_to_scenes();
 
+        // Read all anti-fraud settings from UI
+        let antifraud = AntiFraudConfig {
+            enabled: true,
+            speed_shift: ui.get_af_speed(),
+            min_speed: 1.01,
+            max_speed: 1.04,
+            pitch_shift: ui.get_af_pitch(),
+            micro_zoom: ui.get_af_zoom(),
+            min_zoom: 1.02,
+            max_zoom: 1.05,
+            add_grain: ui.get_af_grain(),
+            strip_metadata: ui.get_af_metadata(),
+            mirror_horizontal: ui.get_af_mirror(),
+            micro_drift: ui.get_af_drift(),
+            micro_rotation: ui.get_af_rotation(),
+            color_jitter: ui.get_af_color(),
+            ultrasonic_bed: ui.get_af_ultrasonic(),
+        };
+
         if source_path_str.trim().is_empty() {
             ui.set_status_text("Ошибка: выберите исходный видеофайл".into());
             return;
@@ -171,11 +259,9 @@ async fn main() -> anyhow::Result<()> {
             info!("Starting batch generation task...");
             let main_duration = MediaManager::probe_duration(&main_path).unwrap_or(300.0);
 
-            // Hardware acceleration check
             let is_nvenc = RenderEngine::is_nvenc_available();
             info!("Rendering engine hardware profile: NVENC={}", is_nvenc);
 
-            // Scan b-roll folder
             let broll_dir = PathBuf::from(&broll_folder_str);
             let brolls = if broll_dir.exists() {
                 MediaManager::scan_directory(&broll_dir)
@@ -192,10 +278,8 @@ async fn main() -> anyhow::Result<()> {
             let mut template = LayoutTemplate::default();
             template.banner.text = banner_text;
 
-            let antifraud = AntiFraudConfig::default();
             let font_path = PathBuf::from("ui/fonts/Unbounded.ttf");
 
-            // Calculate ranges (smart scene detection vs linear step)
             let clip_ranges = if snap_scenes {
                 let scenes = SceneDetector::detect_scene_changes(&main_path, 0.35).unwrap_or_default();
                 SceneDetector::calculate_clip_ranges(main_duration, clip_duration, clips_count, &scenes)
@@ -237,12 +321,11 @@ async fn main() -> anyhow::Result<()> {
                     }
                 });
 
-                // Execute render
                 let res = tokio::task::spawn_blocking(move || RenderEngine::render_clip(&job)).await;
 
                 match res {
                     Ok(Ok(filters)) => {
-                        info!("Clip {} rendered: speed={:.2}x, nvenc={}", cur_idx, filters.speed_factor, is_nvenc);
+                        info!("Clip {} rendered: speed={:.2}x, drift={}, nvenc={}", cur_idx, filters.speed_factor, filters.micro_drift, is_nvenc);
                     }
                     Ok(Err(e)) => {
                         error!("Clip {} failed: {}", cur_idx, e);
@@ -253,7 +336,6 @@ async fn main() -> anyhow::Result<()> {
                 }
             }
 
-            // Finish
             let h = ui_handle.clone();
             let _ = slint::invoke_from_event_loop(move || {
                 if let Some(ui) = h.upgrade() {

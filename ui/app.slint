@@ -23,6 +23,8 @@ export component AppWindow inherits Window {
     callback select_output_folder();
     callback save_template();
     callback generate_preview();
+    callback select_stt_model();
+    callback download_stt_model();
 
     // State properties
     in-out property <int> active_tab: 0;
@@ -34,6 +36,11 @@ export component AppWindow inherits Window {
     in-out property <int> clips_count: 10;
     in-out property <bool> snap_to_scenes: true;
     in-out property <string> preview_status: "Предпросмотр не сформирован";
+
+    // STT Subtitles
+    in-out property <bool> stt_enabled: false;
+    in-out property <string> stt_model_path: "";
+    in-out property <string> stt_status_text: "Модель не загружена";
     
     // Anti-fraud switches
     in-out property <bool> af_speed: true;
@@ -41,6 +48,11 @@ export component AppWindow inherits Window {
     in-out property <bool> af_zoom: true;
     in-out property <bool> af_grain: true;
     in-out property <bool> af_metadata: true;
+    in-out property <bool> af_mirror: false;
+    in-out property <bool> af_drift: true;
+    in-out property <bool> af_rotation: true;
+    in-out property <bool> af_color: true;
+    in-out property <bool> af_ultrasonic: true;
 
     // Progress & Status
     in-out property <bool> is_rendering: false;
@@ -116,7 +128,7 @@ export component AppWindow inherits Window {
                         }
                     }
 
-                    // Tab 1: Template
+                    // Tab 1: Template & STT
                     Rectangle {
                         height: 44px;
                         border-radius: 8px;
@@ -127,7 +139,7 @@ export component AppWindow inherits Window {
                         Text {
                             x: 16px;
                             y: 13px;
-                            text: "Редактор шаблона";
+                            text: "Шаблон и субтитры";
                             color: root.active_tab == 1 ? #FFFFFF : #A1A1AA;
                             font-size: 13px;
                             font-weight: 600;
@@ -427,168 +439,266 @@ export component AppWindow inherits Window {
                     }
                 }
 
-                // Tab 1: TEMPLATE EDITOR PAGE
-                if root.active_tab == 1 : VerticalLayout {
-                    spacing: 16px;
-                    Text { text: "Редактор шаблона Split-Screen"; font-size: 20px; font-weight: 700; color: #FFFFFF; }
-                    
-                    HorizontalLayout {
-                        spacing: 20px;
+                // Tab 1: TEMPLATE & STT SUBTITLES PAGE
+                if root.active_tab == 1 : ScrollView {
+                    VerticalLayout {
+                        spacing: 16px;
+                        Text { text: "Редактор шаблона и субтитров"; font-size: 20px; font-weight: 700; color: #FFFFFF; }
+                        
+                        HorizontalLayout {
+                            spacing: 20px;
 
-                        // Canvas Visual 9:16 Mockup
-                        Rectangle {
-                            width: 220px;
-                            height: 390px;
-                            background: #000000;
-                            border-radius: 12px;
-                            border-width: 1px;
-                            border-color: #3F3F46;
-
-                            VerticalLayout {
-                                padding: 4px;
-                                spacing: 0px;
-
-                                // Top layer (Content)
-                                Rectangle {
-                                    height: 180px;
-                                    background: #18181B;
-                                    border-radius: 8px;
-                                    Text {
-                                        text: "ОСНОВНОЙ КОНТЕНТ\n50% высоты";
-                                        font-size: 10px;
-                                        color: #FFFFFF;
-                                        horizontal-alignment: center;
-                                        y: 75px;
-                                    }
-                                }
-
-                                // Center Banner
-                                Rectangle {
-                                    height: 34px;
-                                    background: #0A0A0C;
-                                    border-width: 1px;
-                                    border-color: #27272A;
-                                    Text {
-                                        text: root.banner_text;
-                                        font-size: 8px;
-                                        font-weight: 700;
-                                        color: #FFFFFF;
-                                        horizontal-alignment: center;
-                                        overflow: elide;
-                                        y: 10px;
-                                    }
-                                }
-
-                                // Bottom layer (Retention Gameplay)
-                                Rectangle {
-                                    height: 170px;
-                                    background: #111113;
-                                    border-radius: 8px;
-                                    Text {
-                                        text: "B-ROLL / ГЕЙМПЛЕЙ\n50% высоты";
-                                        font-size: 10px;
-                                        color: #71717A;
-                                        horizontal-alignment: center;
-                                        y: 70px;
-                                    }
-                                }
-                            }
-                        }
-
-                        // Right configuration controls
-                        VerticalLayout {
-                            spacing: 14px;
-
+                            // Canvas Visual 9:16 Mockup
                             Rectangle {
-                                height: 75px;
-                                background: #141416;
-                                border-radius: 8px;
-                                border-width: 1px;
-                                border-color: #27272A;
-                                VerticalLayout {
-                                    padding-left: 14px;
-                                    padding-right: 14px;
-                                    alignment: center;
-                                    spacing: 4px;
-                                    Text { text: "Текст центрального баннера:"; font-size: 12px; color: #A1A1AA; }
-                                    LineEdit {
-                                        text: root.banner_text;
-                                        font-size: 13px;
-                                        edited(val) => { root.banner_text = val; }
-                                    }
-                                }
-                            }
-
-                            Rectangle {
-                                height: 75px;
-                                background: #141416;
-                                border-radius: 8px;
-                                border-width: 1px;
-                                border-color: #27272A;
-                                VerticalLayout {
-                                    padding-left: 14px;
-                                    padding-right: 14px;
-                                    alignment: center;
-                                    spacing: 4px;
-                                    Text { text: "Разрешение холста:"; font-size: 12px; color: #A1A1AA; }
-                                    Text { text: "1080 x 1920 (Формат 9:16 Shorts / TikTok / Reels)"; font-size: 13px; font-weight: 700; color: #FFFFFF; }
-                                }
-                            }
-
-                            Rectangle {
-                                height: 75px;
-                                background: #141416;
-                                border-radius: 8px;
-                                border-width: 1px;
-                                border-color: #27272A;
-                                VerticalLayout {
-                                    padding-left: 14px;
-                                    padding-right: 14px;
-                                    alignment: center;
-                                    spacing: 4px;
-                                    Text { text: "Шрифт субтитров и баннера:"; font-size: 12px; color: #A1A1AA; }
-                                    Text { text: "Unbounded Bold"; font-size: 13px; font-weight: 700; color: #FFFFFF; }
-                                }
-                            }
-
-                            // Preview generation button
-                            Rectangle {
-                                height: 46px;
-                                border-radius: 8px;
-                                background: #27272A;
+                                width: 220px;
+                                height: 390px;
+                                background: #000000;
+                                border-radius: 12px;
                                 border-width: 1px;
                                 border-color: #3F3F46;
-                                TouchArea { clicked => { root.generate_preview(); } }
-                                Text {
-                                    text: "Тестовый рендер 1 кадра";
-                                    font-size: 12px;
-                                    font-weight: 700;
-                                    color: #FFFFFF;
-                                    x: (parent.width - self.width) / 2;
-                                    y: (parent.height - self.height) / 2;
+
+                                VerticalLayout {
+                                    padding: 4px;
+                                    spacing: 0px;
+
+                                    // Top layer (Content)
+                                    Rectangle {
+                                        height: 180px;
+                                        background: #18181B;
+                                        border-radius: 8px;
+                                        Text {
+                                            text: "ОСНОВНОЙ КОНТЕНТ\n50% высоты";
+                                            font-size: 10px;
+                                            color: #FFFFFF;
+                                            horizontal-alignment: center;
+                                            y: 75px;
+                                        }
+                                    }
+
+                                    // Center Banner
+                                    Rectangle {
+                                        height: 34px;
+                                        background: #0A0A0C;
+                                        border-width: 1px;
+                                        border-color: #27272A;
+                                        Text {
+                                            text: root.banner_text;
+                                            font-size: 8px;
+                                            font-weight: 700;
+                                            color: #FFFFFF;
+                                            horizontal-alignment: center;
+                                            overflow: elide;
+                                            y: 10px;
+                                        }
+                                    }
+
+                                    // Bottom layer (Retention Gameplay)
+                                    Rectangle {
+                                        height: 170px;
+                                        background: #111113;
+                                        border-radius: 8px;
+                                        Text {
+                                            text: "B-ROLL / ГЕЙМПЛЕЙ\n50% высоты";
+                                            font-size: 10px;
+                                            color: #71717A;
+                                            horizontal-alignment: center;
+                                            y: 70px;
+                                        }
+                                    }
                                 }
                             }
 
-                            Text {
-                                text: root.preview_status;
-                                font-size: 11px;
-                                color: #A1A1AA;
+                            // Configuration controls
+                            VerticalLayout {
+                                spacing: 12px;
+
+                                Rectangle {
+                                    height: 70px;
+                                    background: #141416;
+                                    border-radius: 8px;
+                                    border-width: 1px;
+                                    border-color: #27272A;
+                                    VerticalLayout {
+                                        padding-left: 14px;
+                                        padding-right: 14px;
+                                        alignment: center;
+                                        spacing: 4px;
+                                        Text { text: "Текст центрального баннера:"; font-size: 12px; color: #A1A1AA; }
+                                        LineEdit {
+                                            text: root.banner_text;
+                                            font-size: 13px;
+                                            edited(val) => { root.banner_text = val; }
+                                        }
+                                    }
+                                }
+
+                                // STT Configuration Card
+                                Rectangle {
+                                    height: 120px;
+                                    background: #141416;
+                                    border-radius: 8px;
+                                    border-width: 1px;
+                                    border-color: #27272A;
+                                    VerticalLayout {
+                                        padding: 12px;
+                                        spacing: 8px;
+                                        HorizontalLayout {
+                                            alignment: space-between;
+                                            Text { text: "Генерация субтитров (Whisper STT):"; font-size: 12px; color: #FFFFFF; vertical-alignment: center; }
+                                            TouchArea {
+                                                clicked => { root.stt_enabled = !root.stt_enabled; }
+                                                Text { text: root.stt_enabled ? "ВКЛЮЧЕНО" : "ОТКЛЮЧЕНО"; color: root.stt_enabled ? #FFFFFF : #52525B; font-weight: 700; font-size: 12px; }
+                                            }
+                                        }
+                                        HorizontalLayout {
+                                            spacing: 10px;
+                                            Rectangle {
+                                                height: 36px;
+                                                border-radius: 6px;
+                                                background: #27272A;
+                                                TouchArea { clicked => { root.select_stt_model(); } }
+                                                Text { text: "Выбрать .bin модель"; font-size: 11px; color: #FFFFFF; font-weight: 600; x: (parent.width - self.width)/2; y: (parent.height - self.height)/2; }
+                                            }
+                                            Rectangle {
+                                                height: 36px;
+                                                border-radius: 6px;
+                                                background: #27272A;
+                                                TouchArea { clicked => { root.download_stt_model(); } }
+                                                Text { text: "Скачать tiny (75 МБ)"; font-size: 11px; color: #FFFFFF; font-weight: 600; x: (parent.width - self.width)/2; y: (parent.height - self.height)/2; }
+                                            }
+                                        }
+                                        Text { text: root.stt_status_text; font-size: 10px; color: #A1A1AA; overflow: elide; }
+                                    }
+                                }
+
+                                // Preview generation button
+                                Rectangle {
+                                    height: 42px;
+                                    border-radius: 8px;
+                                    background: #27272A;
+                                    border-width: 1px;
+                                    border-color: #3F3F46;
+                                    TouchArea { clicked => { root.generate_preview(); } }
+                                    Text {
+                                        text: "Тестовый рендер 1 кадра";
+                                        font-size: 12px;
+                                        font-weight: 700;
+                                        color: #FFFFFF;
+                                        x: (parent.width - self.width) / 2;
+                                        y: (parent.height - self.height) / 2;
+                                    }
+                                }
+
+                                Text {
+                                    text: root.preview_status;
+                                    font-size: 11px;
+                                    color: #A1A1AA;
+                                }
                             }
                         }
                     }
                 }
 
                 // Tab 2: ANTI-FRAUD SETTINGS PAGE
-                if root.active_tab == 2 : VerticalLayout {
-                    spacing: 16px;
-                    Text { text: "Настройки алгоритмов антифрода и уникализации"; font-size: 20px; font-weight: 700; color: #FFFFFF; }
-                    Text { text: "Эти фильтры изменяют цифровой хэш каждого ролика в серии, предотвращая блокировку и shadowban."; font-size: 12px; color: #A1A1AA; }
-
+                if root.active_tab == 2 : ScrollView {
                     VerticalLayout {
-                        spacing: 10px;
+                        spacing: 12px;
+                        Text { text: "Настройки алгоритмов антифрода и уникализации"; font-size: 20px; font-weight: 700; color: #FFFFFF; }
+                        Text { text: "Комплекс фильтров для обхода Content ID, хеш-алгоритмов и детекции дубликатов."; font-size: 12px; color: #A1A1AA; }
+
+                        // Anti-fraud cards
+                        Rectangle {
+                            height: 52px;
+                            background: #141416;
+                            border-radius: 8px;
+                            border-width: 1px;
+                            border-color: #27272A;
+                            HorizontalLayout {
+                                padding-left: 16px;
+                                padding-right: 16px;
+                                alignment: space-between;
+                                Text { text: "Горизонтальное отзеркаливание (hflip)"; font-size: 13px; color: #FFFFFF; vertical-alignment: center; }
+                                TouchArea {
+                                    clicked => { root.af_mirror = !root.af_mirror; }
+                                    Text { text: root.af_mirror ? "АКТИВНО" : "ОТКЛЮЧЕНО"; color: root.af_mirror ? #FFFFFF : #52525B; font-weight: 700; font-size: 12px; vertical-alignment: center; }
+                                }
+                            }
+                        }
 
                         Rectangle {
-                            height: 56px;
+                            height: 52px;
+                            background: #141416;
+                            border-radius: 8px;
+                            border-width: 1px;
+                            border-color: #27272A;
+                            HorizontalLayout {
+                                padding-left: 16px;
+                                padding-right: 16px;
+                                alignment: space-between;
+                                Text { text: "Микро-плавание кадра (1–2 px непрерывно)"; font-size: 13px; color: #FFFFFF; vertical-alignment: center; }
+                                TouchArea {
+                                    clicked => { root.af_drift = !root.af_drift; }
+                                    Text { text: root.af_drift ? "АКТИВНО" : "ОТКЛЮЧЕНО"; color: root.af_drift ? #FFFFFF : #52525B; font-weight: 700; font-size: 12px; vertical-alignment: center; }
+                                }
+                            }
+                        }
+
+                        Rectangle {
+                            height: 52px;
+                            background: #141416;
+                            border-radius: 8px;
+                            border-width: 1px;
+                            border-color: #27272A;
+                            HorizontalLayout {
+                                padding-left: 16px;
+                                padding-right: 16px;
+                                alignment: space-between;
+                                Text { text: "Микро-поворот кадра (0.2° – 0.5° наклона)"; font-size: 13px; color: #FFFFFF; vertical-alignment: center; }
+                                TouchArea {
+                                    clicked => { root.af_rotation = !root.af_rotation; }
+                                    Text { text: root.af_rotation ? "АКТИВНО" : "ОТКЛЮЧЕНО"; color: root.af_rotation ? #FFFFFF : #52525B; font-weight: 700; font-size: 12px; vertical-alignment: center; }
+                                }
+                            }
+                        }
+
+                        Rectangle {
+                            height: 52px;
+                            background: #141416;
+                            border-radius: 8px;
+                            border-width: 1px;
+                            border-color: #27272A;
+                            HorizontalLayout {
+                                padding-left: 16px;
+                                padding-right: 16px;
+                                alignment: space-between;
+                                Text { text: "Цветовой джиттер (Color EQ / контраст / гамма)"; font-size: 13px; color: #FFFFFF; vertical-alignment: center; }
+                                TouchArea {
+                                    clicked => { root.af_color = !root.af_color; }
+                                    Text { text: root.af_color ? "АКТИВНО" : "ОТКЛЮЧЕНО"; color: root.af_color ? #FFFFFF : #52525B; font-weight: 700; font-size: 12px; vertical-alignment: center; }
+                                }
+                            }
+                        }
+
+                        Rectangle {
+                            height: 52px;
+                            background: #141416;
+                            border-radius: 8px;
+                            border-width: 1px;
+                            border-color: #27272A;
+                            HorizontalLayout {
+                                padding-left: 16px;
+                                padding-right: 16px;
+                                alignment: space-between;
+                                Text { text: "Неслышимый акустический вотермарк (18.5 kHz)"; font-size: 13px; color: #FFFFFF; vertical-alignment: center; }
+                                TouchArea {
+                                    clicked => { root.af_ultrasonic = !root.af_ultrasonic; }
+                                    Text { text: root.af_ultrasonic ? "АКТИВНО" : "ОТКЛЮЧЕНО"; color: root.af_ultrasonic ? #FFFFFF : #52525B; font-weight: 700; font-size: 12px; vertical-alignment: center; }
+                                }
+                            }
+                        }
+
+                        Rectangle {
+                            height: 52px;
                             background: #141416;
                             border-radius: 8px;
                             border-width: 1px;
@@ -598,12 +708,15 @@ export component AppWindow inherits Window {
                                 padding-right: 16px;
                                 alignment: space-between;
                                 Text { text: "Микро-ускорение видео (1.01x – 1.04x)"; font-size: 13px; color: #FFFFFF; vertical-alignment: center; }
-                                Text { text: root.af_speed ? "АКТИВНО" : "ОТКЛЮЧЕНО"; color: root.af_speed ? #FFFFFF : #52525B; font-weight: 700; font-size: 12px; vertical-alignment: center; }
+                                TouchArea {
+                                    clicked => { root.af_speed = !root.af_speed; }
+                                    Text { text: root.af_speed ? "АКТИВНО" : "ОТКЛЮЧЕНО"; color: root.af_speed ? #FFFFFF : #52525B; font-weight: 700; font-size: 12px; vertical-alignment: center; }
+                                }
                             }
                         }
 
                         Rectangle {
-                            height: 56px;
+                            height: 52px;
                             background: #141416;
                             border-radius: 8px;
                             border-width: 1px;
@@ -613,12 +726,15 @@ export component AppWindow inherits Window {
                                 padding-right: 16px;
                                 alignment: space-between;
                                 Text { text: "Сдвиг аудио-питча (Pitch Jitter)"; font-size: 13px; color: #FFFFFF; vertical-alignment: center; }
-                                Text { text: root.af_pitch ? "АКТИВНО" : "ОТКЛЮЧЕНО"; color: root.af_pitch ? #FFFFFF : #52525B; font-weight: 700; font-size: 12px; vertical-alignment: center; }
+                                TouchArea {
+                                    clicked => { root.af_pitch = !root.af_pitch; }
+                                    Text { text: root.af_pitch ? "АКТИВНО" : "ОТКЛЮЧЕНО"; color: root.af_pitch ? #FFFFFF : #52525B; font-weight: 700; font-size: 12px; vertical-alignment: center; }
+                                }
                             }
                         }
 
                         Rectangle {
-                            height: 56px;
+                            height: 52px;
                             background: #141416;
                             border-radius: 8px;
                             border-width: 1px;
@@ -628,12 +744,15 @@ export component AppWindow inherits Window {
                                 padding-right: 16px;
                                 alignment: space-between;
                                 Text { text: "Микро-зум и случайный кроп (2-4%)"; font-size: 13px; color: #FFFFFF; vertical-alignment: center; }
-                                Text { text: root.af_zoom ? "АКТИВНО" : "ОТКЛЮЧЕНО"; color: root.af_zoom ? #FFFFFF : #52525B; font-weight: 700; font-size: 12px; vertical-alignment: center; }
+                                TouchArea {
+                                    clicked => { root.af_zoom = !root.af_zoom; }
+                                    Text { text: root.af_zoom ? "АКТИВНО" : "ОТКЛЮЧЕНО"; color: root.af_zoom ? #FFFFFF : #52525B; font-weight: 700; font-size: 12px; vertical-alignment: center; }
+                                }
                             }
                         }
 
                         Rectangle {
-                            height: 56px;
+                            height: 52px;
                             background: #141416;
                             border-radius: 8px;
                             border-width: 1px;
@@ -642,13 +761,16 @@ export component AppWindow inherits Window {
                                 padding-left: 16px;
                                 padding-right: 16px;
                                 alignment: space-between;
-                                Text { text: "Добавление легкого цифрового шума (Grain)"; font-size: 13px; color: #FFFFFF; vertical-alignment: center; }
-                                Text { text: root.af_grain ? "АКТИВНО" : "ОТКЛЮЧЕНО"; color: root.af_grain ? #FFFFFF : #52525B; font-weight: 700; font-size: 12px; vertical-alignment: center; }
+                                Text { text: "Добавление легкого цифрового зерна (Grain)"; font-size: 13px; color: #FFFFFF; vertical-alignment: center; }
+                                TouchArea {
+                                    clicked => { root.af_grain = !root.af_grain; }
+                                    Text { text: root.af_grain ? "АКТИВНО" : "ОТКЛЮЧЕНО"; color: root.af_grain ? #FFFFFF : #52525B; font-weight: 700; font-size: 12px; vertical-alignment: center; }
+                                }
                             }
                         }
 
                         Rectangle {
-                            height: 56px;
+                            height: 52px;
                             background: #141416;
                             border-radius: 8px;
                             border-width: 1px;
@@ -658,7 +780,10 @@ export component AppWindow inherits Window {
                                 padding-right: 16px;
                                 alignment: space-between;
                                 Text { text: "Полная очистка метаданных (-map_metadata -1)"; font-size: 13px; color: #FFFFFF; vertical-alignment: center; }
-                                Text { text: root.af_metadata ? "АКТИВНО" : "ОТКЛЮЧЕНО"; color: root.af_metadata ? #FFFFFF : #52525B; font-weight: 700; font-size: 12px; vertical-alignment: center; }
+                                TouchArea {
+                                    clicked => { root.af_metadata = !root.af_metadata; }
+                                    Text { text: root.af_metadata ? "АКТИВНО" : "ОТКЛЮЧЕНО"; color: root.af_metadata ? #FFFFFF : #52525B; font-weight: 700; font-size: 12px; vertical-alignment: center; }
+                                }
                             }
                         }
                     }

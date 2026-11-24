@@ -17,11 +17,25 @@ fn test_filtergraph_builder_structure() {
     assert!(v_filter.contains("vstack=inputs=2"));
     assert!(v_filter.contains("drawbox="));
     assert!(v_filter.contains("drawtext="));
+    assert!(v_filter.contains("crop=")); // drift
+    assert!(v_filter.contains("rotate=")); // rotation
+    assert!(v_filter.contains("eq=")); // color jitter
     assert!(v_filter.contains("[vout]"));
 
     // Audio filter
     assert!(a_filter.contains("[0:a]"));
     assert!(a_filter.contains("[aout]"));
+}
+
+#[test]
+fn test_filtergraph_mirroring() {
+    let template = LayoutTemplate::default();
+    let mut antifraud = AntiFraudConfig::default();
+    antifraud.mirror_horizontal = true;
+    let filters = antifraud.generate_instance();
+
+    let (v_filter, _) = FilterGraphBuilder::build(&template, &filters, None);
+    assert!(v_filter.contains("hflip"));
 }
 
 #[test]
@@ -32,7 +46,6 @@ fn test_filtergraph_sanitization() {
     let filters = antifraud.generate_instance();
 
     let (v_filter, _) = FilterGraphBuilder::build(&template, &filters, None);
-    // Ensure single quotes and colons are properly escaped
     assert!(v_filter.contains("\\'"));
     assert!(v_filter.contains("\\:"));
 }
