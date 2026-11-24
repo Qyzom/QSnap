@@ -8,12 +8,12 @@ export struct LogItem {
 }
 
 export component AppWindow inherits Window {
-    title: "QSnap • Viral Video Studio & Anti-Fraud Clipper";
+    title: "QSnap - Video Studio";
     preferred-width: 1080px;
     preferred-height: 720px;
     min-width: 900px;
     min-height: 600px;
-    background: #0B0E17;
+    background: #09090B;
     default-font-family: "Unbounded";
 
     // Callbacks to Rust
@@ -28,7 +28,7 @@ export component AppWindow inherits Window {
     in-out property <string> source_video_path: "";
     in-out property <string> broll_folder_path: "";
     in-out property <string> output_folder_path: "";
-    in-out property <string> banner_text: "🔥 Подпишись • Промокод: BONUS2026";
+    in-out property <string> banner_text: "Подпишись • Промокод: BONUS2026";
     in-out property <int> clip_duration_secs: 45;
     in-out property <int> clips_count: 10;
     
@@ -56,7 +56,7 @@ export component AppWindow inherits Window {
         // ==================== LEFT SIDEBAR ====================
         Rectangle {
             width: 250px;
-            background: #111422;
+            background: #111113;
 
             VerticalLayout {
                 padding: 20px;
@@ -77,19 +77,19 @@ export component AppWindow inherits Window {
                             text: "QSnap";
                             font-size: 20px;
                             font-weight: 800;
-                            color: #00F0FF;
+                            color: #FFFFFF;
                         }
                         Text {
-                            text: "CLIPPER STUDIO";
-                            font-size: 9px;
+                            text: "STUDIO";
+                            font-size: 10px;
                             font-weight: 700;
-                            letter-spacing: 1.5px;
-                            color: #A855F7;
+                            letter-spacing: 2px;
+                            color: #71717A;
                         }
                     }
                 }
 
-                Rectangle { height: 1px; background: #232840; }
+                Rectangle { height: 1px; background: #27272A; }
 
                 // Navigation Buttons
                 VerticalLayout {
@@ -99,15 +99,15 @@ export component AppWindow inherits Window {
                     Rectangle {
                         height: 44px;
                         border-radius: 8px;
-                        background: root.active_tab == 0 ? #1E233B : transparent;
+                        background: root.active_tab == 0 ? #27272A : transparent;
                         border-width: root.active_tab == 0 ? 1px : 0px;
-                        border-color: #00F0FF;
+                        border-color: #3F3F46;
                         TouchArea { clicked => { root.active_tab = 0; } }
                         Text {
                             x: 16px;
                             y: 13px;
-                            text: "⚡ Генерация серии";
-                            color: root.active_tab == 0 ? #00F0FF : #94A3B8;
+                            text: "Генерация серии";
+                            color: root.active_tab == 0 ? #FFFFFF : #A1A1AA;
                             font-size: 13px;
                             font-weight: 600;
                         }
@@ -117,15 +117,15 @@ export component AppWindow inherits Window {
                     Rectangle {
                         height: 44px;
                         border-radius: 8px;
-                        background: root.active_tab == 1 ? #1E233B : transparent;
+                        background: root.active_tab == 1 ? #27272A : transparent;
                         border-width: root.active_tab == 1 ? 1px : 0px;
-                        border-color: #00F0FF;
+                        border-color: #3F3F46;
                         TouchArea { clicked => { root.active_tab = 1; } }
                         Text {
                             x: 16px;
                             y: 13px;
-                            text: "📐 Редактор шаблона";
-                            color: root.active_tab == 1 ? #00F0FF : #94A3B8;
+                            text: "Редактор шаблона";
+                            color: root.active_tab == 1 ? #FFFFFF : #A1A1AA;
                             font-size: 13px;
                             font-weight: 600;
                         }
@@ -135,15 +135,15 @@ export component AppWindow inherits Window {
                     Rectangle {
                         height: 44px;
                         border-radius: 8px;
-                        background: root.active_tab == 2 ? #1E233B : transparent;
+                        background: root.active_tab == 2 ? #27272A : transparent;
                         border-width: root.active_tab == 2 ? 1px : 0px;
-                        border-color: #00F0FF;
+                        border-color: #3F3F46;
                         TouchArea { clicked => { root.active_tab = 2; } }
                         Text {
                             x: 16px;
                             y: 13px;
-                            text: "🛡️ Антифрод / Уникализация";
-                            color: root.active_tab == 2 ? #00F0FF : #94A3B8;
+                            text: "Антифрод и уникализация";
+                            color: root.active_tab == 2 ? #FFFFFF : #A1A1AA;
                             font-size: 13px;
                             font-weight: 600;
                         }
@@ -153,15 +153,15 @@ export component AppWindow inherits Window {
                     Rectangle {
                         height: 44px;
                         border-radius: 8px;
-                        background: root.active_tab == 3 ? #1E233B : transparent;
+                        background: root.active_tab == 3 ? #27272A : transparent;
                         border-width: root.active_tab == 3 ? 1px : 0px;
-                        border-color: #00F0FF;
+                        border-color: #3F3F46;
                         TouchArea { clicked => { root.active_tab = 3; } }
                         Text {
                             x: 16px;
                             y: 13px;
-                            text: "📜 Консоль и логи";
-                            color: root.active_tab == 3 ? #00F0FF : #94A3B8;
+                            text: "Консоль и логи";
+                            color: root.active_tab == 3 ? #FFFFFF : #A1A1AA;
                             font-size: 13px;
                             font-weight: 600;
                         }
@@ -172,11 +172,11 @@ export component AppWindow inherits Window {
 
                 // Bottom engine status pill
                 Rectangle {
-                    height: 52px;
+                    height: 48px;
                     border-radius: 8px;
-                    background: #181C2E;
+                    background: #18181B;
                     border-width: 1px;
-                    border-color: #272F4D;
+                    border-color: #27272A;
                     HorizontalLayout {
                         padding-left: 12px;
                         padding-right: 12px;
@@ -186,11 +186,11 @@ export component AppWindow inherits Window {
                             width: 8px;
                             height: 8px;
                             border-radius: 4px;
-                            background: root.is_rendering ? #FFB800 : #10B981;
+                            background: root.is_rendering ? #A1A1AA : #FFFFFF;
                         }
                         Text {
                             text: root.is_rendering ? "Идет нарезка" : "Готов к работе";
-                            color: #94A3B8;
+                            color: #A1A1AA;
                             font-size: 11px;
                         }
                     }
@@ -200,7 +200,7 @@ export component AppWindow inherits Window {
 
         // ==================== MAIN CONTENT AREA ====================
         Rectangle {
-            background: #0B0E17;
+            background: #09090B;
 
             VerticalLayout {
                 padding: 24px;
@@ -220,42 +220,45 @@ export component AppWindow inherits Window {
                     // Source Video Selector Card
                     Rectangle {
                         height: 80px;
-                        background: #141829;
+                        background: #141416;
                         border-radius: 10px;
                         border-width: 1px;
-                        border-color: #232A45;
-                        padding: 14px;
+                        border-color: #27272A;
                         HorizontalLayout {
+                            padding-left: 16px;
+                            padding-right: 16px;
                             spacing: 16px;
                             VerticalLayout {
                                 alignment: center;
                                 spacing: 4px;
                                 Text {
-                                    text: "🎬 Исходный фильм / сериал / мультик:";
+                                    text: "Исходный видеофайл:";
                                     font-size: 12px;
-                                    color: #94A3B8;
+                                    color: #A1A1AA;
                                 }
                                 Text {
                                     text: root.source_video_path != "" ? root.source_video_path : "Файл не выбран (нажмите для выбора)";
                                     font-size: 13px;
                                     font-weight: 600;
-                                    color: root.source_video_path != "" ? #00F0FF : #64748B;
+                                    color: root.source_video_path != "" ? #FFFFFF : #52525B;
                                     overflow: elide;
                                 }
                             }
                             Rectangle {
                                 width: 140px;
-                                height: 42px;
+                                height: 40px;
                                 border-radius: 8px;
-                                background: #232A45;
+                                background: #27272A;
+                                border-width: 1px;
+                                border-color: #3F3F46;
                                 TouchArea { clicked => { root.select_source_video(); } }
                                 Text {
-                                    x: 20px;
-                                    y: 12px;
                                     text: "Выбрать файл";
                                     font-size: 12px;
                                     color: #FFFFFF;
                                     font-weight: 600;
+                                    x: (parent.width - self.width) / 2;
+                                    y: (parent.height - self.height) / 2;
                                 }
                             }
                         }
@@ -264,42 +267,45 @@ export component AppWindow inherits Window {
                     // B-Roll Gameplay Folder Card
                     Rectangle {
                         height: 80px;
-                        background: #141829;
+                        background: #141416;
                         border-radius: 10px;
                         border-width: 1px;
-                        border-color: #232A45;
-                        padding: 14px;
+                        border-color: #27272A;
                         HorizontalLayout {
+                            padding-left: 16px;
+                            padding-right: 16px;
                             spacing: 16px;
                             VerticalLayout {
                                 alignment: center;
                                 spacing: 4px;
                                 Text {
-                                    text: "🎮 Папка с удерживающим B-roll геймплеем (Игры, анимация, динамика):";
+                                    text: "Каталог B-roll видеоряда (геймплей, анимация):";
                                     font-size: 12px;
-                                    color: #94A3B8;
+                                    color: #A1A1AA;
                                 }
                                 Text {
                                     text: root.broll_folder_path != "" ? root.broll_folder_path : "Папка не выбрана";
                                     font-size: 13px;
                                     font-weight: 600;
-                                    color: root.broll_folder_path != "" ? #A855F7 : #64748B;
+                                    color: root.broll_folder_path != "" ? #FFFFFF : #52525B;
                                     overflow: elide;
                                 }
                             }
                             Rectangle {
                                 width: 140px;
-                                height: 42px;
+                                height: 40px;
                                 border-radius: 8px;
-                                background: #232A45;
+                                background: #27272A;
+                                border-width: 1px;
+                                border-color: #3F3F46;
                                 TouchArea { clicked => { root.select_broll_folder(); } }
                                 Text {
-                                    x: 20px;
-                                    y: 12px;
                                     text: "Выбрать папку";
                                     font-size: 12px;
                                     color: #FFFFFF;
                                     font-weight: 600;
+                                    x: (parent.width - self.width) / 2;
+                                    y: (parent.height - self.height) / 2;
                                 }
                             }
                         }
@@ -311,14 +317,16 @@ export component AppWindow inherits Window {
 
                         Rectangle {
                             height: 70px;
-                            background: #141829;
+                            background: #141416;
                             border-radius: 10px;
                             border-width: 1px;
-                            border-color: #232A45;
-                            padding: 12px;
+                            border-color: #27272A;
                             VerticalLayout {
+                                padding-left: 14px;
+                                padding-right: 14px;
+                                alignment: center;
                                 spacing: 4px;
-                                Text { text: "Количество клипов в серии:"; font-size: 11px; color: #94A3B8; }
+                                Text { text: "Количество клипов в серии:"; font-size: 11px; color: #A1A1AA; }
                                 LineEdit {
                                     text: root.clips_count;
                                     font-size: 14px;
@@ -329,14 +337,16 @@ export component AppWindow inherits Window {
 
                         Rectangle {
                             height: 70px;
-                            background: #141829;
+                            background: #141416;
                             border-radius: 10px;
                             border-width: 1px;
-                            border-color: #232A45;
-                            padding: 12px;
+                            border-color: #27272A;
                             VerticalLayout {
+                                padding-left: 14px;
+                                padding-right: 14px;
+                                alignment: center;
                                 spacing: 4px;
-                                Text { text: "Длительность клипа (сек):"; font-size: 11px; color: #94A3B8; }
+                                Text { text: "Длительность клипа (сек):"; font-size: 11px; color: #A1A1AA; }
                                 LineEdit {
                                     text: root.clip_duration_secs;
                                     font-size: 14px;
@@ -349,14 +359,16 @@ export component AppWindow inherits Window {
                     // Banner Text Quick Edit
                     Rectangle {
                         height: 70px;
-                        background: #141829;
+                        background: #141416;
                         border-radius: 10px;
                         border-width: 1px;
-                        border-color: #232A45;
-                        padding: 12px;
+                        border-color: #27272A;
                         VerticalLayout {
+                            padding-left: 14px;
+                            padding-right: 14px;
+                            alignment: center;
                             spacing: 4px;
-                            Text { text: "Текст рекламного разделителя:"; font-size: 11px; color: #94A3B8; }
+                            Text { text: "Текст центрального баннера:"; font-size: 11px; color: #A1A1AA; }
                             LineEdit {
                                 text: root.banner_text;
                                 font-size: 13px;
@@ -365,35 +377,35 @@ export component AppWindow inherits Window {
                         }
                     }
 
-                    Rectangle { height: 10px; }
+                    Rectangle { height: 6px; }
 
                     // Progress bar
                     Rectangle {
-                        height: 12px;
-                        border-radius: 6px;
-                        background: #1A1E33;
+                        height: 10px;
+                        border-radius: 5px;
+                        background: #1F1F23;
                         Rectangle {
                             x: 0px;
                             y: 0px;
                             width: root.progress_percent * parent.width;
                             height: parent.height;
-                            border-radius: 6px;
-                            background: #00F0FF;
+                            border-radius: 5px;
+                            background: #FFFFFF;
                         }
                     }
 
                     Text {
                         text: root.status_text;
                         font-size: 12px;
-                        color: #94A3B8;
+                        color: #A1A1AA;
                         horizontal-alignment: center;
                     }
 
                     // Big Action Button
                     Rectangle {
-                        height: 54px;
-                        border-radius: 10px;
-                        background: root.is_rendering ? #2D3748 : #00F0FF;
+                        height: 52px;
+                        border-radius: 8px;
+                        background: root.is_rendering ? #27272A : #FFFFFF;
                         TouchArea {
                             clicked => {
                                 if (!root.is_rendering) {
@@ -402,10 +414,10 @@ export component AppWindow inherits Window {
                             }
                         }
                         Text {
-                            text: root.is_rendering ? "⏳ Идет рендеринг видеосерии..." : "🚀 ЗАПУСТИТЬ НАРЕЗКУ И УНИКАЛИЗАЦИЮ";
-                            font-size: 14px;
+                            text: root.is_rendering ? "Идет рендеринг видеосерии..." : "ЗАПУСТИТЬ НАРЕЗКУ И УНИКАЛИЗАЦИЮ";
+                            font-size: 13px;
                             font-weight: 800;
-                            color: root.is_rendering ? #A0AEC0 : #0B0E17;
+                            color: root.is_rendering ? #71717A : #09090B;
                             x: (parent.width - self.width) / 2;
                             y: (parent.height - self.height) / 2;
                         }
@@ -425,9 +437,9 @@ export component AppWindow inherits Window {
                             width: 220px;
                             height: 390px;
                             background: #000000;
-                            border-radius: 14px;
-                            border-width: 2px;
-                            border-color: #00F0FF;
+                            border-radius: 12px;
+                            border-width: 1px;
+                            border-color: #3F3F46;
 
                             VerticalLayout {
                                 padding: 4px;
@@ -436,23 +448,23 @@ export component AppWindow inherits Window {
                                 // Top layer (Content)
                                 Rectangle {
                                     height: 180px;
-                                    background: #1E233B;
-                                    border-radius: 10px;
+                                    background: #18181B;
+                                    border-radius: 8px;
                                     Text {
-                                        text: "🎬 ОСНОВНОЙ КОНТЕНТ\n(Фильм / Сериал)\n50% высоты";
+                                        text: "ОСНОВНОЙ КОНТЕНТ\n50% высоты";
                                         font-size: 10px;
-                                        color: #00F0FF;
+                                        color: #FFFFFF;
                                         horizontal-alignment: center;
-                                        y: 70px;
+                                        y: 75px;
                                     }
                                 }
 
                                 // Center Banner
                                 Rectangle {
                                     height: 34px;
-                                    background: #000000;
+                                    background: #0A0A0C;
                                     border-width: 1px;
-                                    border-color: #A855F7;
+                                    border-color: #27272A;
                                     Text {
                                         text: root.banner_text;
                                         font-size: 8px;
@@ -467,14 +479,14 @@ export component AppWindow inherits Window {
                                 // Bottom layer (Retention Gameplay)
                                 Rectangle {
                                     height: 170px;
-                                    background: #141829;
-                                    border-radius: 10px;
+                                    background: #111113;
+                                    border-radius: 8px;
                                     Text {
-                                        text: "🎮 B-ROLL / ГЕЙМПЛЕЙ\n(Динамичный видеоряд)\n50% высоты";
+                                        text: "B-ROLL / ГЕЙМПЛЕЙ\n50% высоты";
                                         font-size: 10px;
-                                        color: #A855F7;
+                                        color: #71717A;
                                         horizontal-alignment: center;
-                                        y: 65px;
+                                        y: 70px;
                                     }
                                 }
                             }
@@ -486,12 +498,16 @@ export component AppWindow inherits Window {
 
                             Rectangle {
                                 height: 75px;
-                                background: #141829;
-                                border-radius: 10px;
-                                padding: 12px;
+                                background: #141416;
+                                border-radius: 8px;
+                                border-width: 1px;
+                                border-color: #27272A;
                                 VerticalLayout {
+                                    padding-left: 14px;
+                                    padding-right: 14px;
+                                    alignment: center;
                                     spacing: 4px;
-                                    Text { text: "Текст центрального баннера:"; font-size: 12px; color: #94A3B8; }
+                                    Text { text: "Текст центрального баннера:"; font-size: 12px; color: #A1A1AA; }
                                     LineEdit {
                                         text: root.banner_text;
                                         font-size: 13px;
@@ -502,25 +518,33 @@ export component AppWindow inherits Window {
 
                             Rectangle {
                                 height: 75px;
-                                background: #141829;
-                                border-radius: 10px;
-                                padding: 12px;
+                                background: #141416;
+                                border-radius: 8px;
+                                border-width: 1px;
+                                border-color: #27272A;
                                 VerticalLayout {
+                                    padding-left: 14px;
+                                    padding-right: 14px;
+                                    alignment: center;
                                     spacing: 4px;
-                                    Text { text: "Разрешение холста:"; font-size: 12px; color: #94A3B8; }
-                                    Text { text: "1080 x 1920 (Формат 9:16 Shorts / TikTok / Reels)"; font-size: 13px; font-weight: 700; color: #00F0FF; }
+                                    Text { text: "Разрешение холста:"; font-size: 12px; color: #A1A1AA; }
+                                    Text { text: "1080 x 1920 (Формат 9:16 Shorts / TikTok / Reels)"; font-size: 13px; font-weight: 700; color: #FFFFFF; }
                                 }
                             }
 
                             Rectangle {
                                 height: 75px;
-                                background: #141829;
-                                border-radius: 10px;
-                                padding: 12px;
+                                background: #141416;
+                                border-radius: 8px;
+                                border-width: 1px;
+                                border-color: #27272A;
                                 VerticalLayout {
+                                    padding-left: 14px;
+                                    padding-right: 14px;
+                                    alignment: center;
                                     spacing: 4px;
-                                    Text { text: "Шрифт субтитров и баннера:"; font-size: 12px; color: #94A3B8; }
-                                    Text { text: "Unbounded Bold (встроен в QSnap)"; font-size: 13px; font-weight: 700; color: #A855F7; }
+                                    Text { text: "Шрифт субтитров и баннера:"; font-size: 12px; color: #A1A1AA; }
+                                    Text { text: "Unbounded Bold"; font-size: 13px; font-weight: 700; color: #FFFFFF; }
                                 }
                             }
                         }
@@ -531,68 +555,83 @@ export component AppWindow inherits Window {
                 if root.active_tab == 2 : VerticalLayout {
                     spacing: 16px;
                     Text { text: "Настройки алгоритмов антифрода и уникализации"; font-size: 20px; font-weight: 700; color: #FFFFFF; }
-                    Text { text: "Эти фильтры изменяют цифровой хэш каждого ролика в серии, предотвращая блокировку и shadowban."; font-size: 12px; color: #94A3B8; }
+                    Text { text: "Эти фильтры изменяют цифровой хэш каждого ролика в серии, предотвращая блокировку и shadowban."; font-size: 12px; color: #A1A1AA; }
 
                     VerticalLayout {
                         spacing: 10px;
 
                         Rectangle {
-                            height: 60px;
-                            background: #141829;
+                            height: 56px;
+                            background: #141416;
                             border-radius: 8px;
-                            padding: 14px;
+                            border-width: 1px;
+                            border-color: #27272A;
                             HorizontalLayout {
+                                padding-left: 16px;
+                                padding-right: 16px;
                                 alignment: space-between;
-                                Text { text: "⚡ Микро-ускорение видео (1.01x – 1.04x)"; font-size: 13px; color: #FFFFFF; y: 6px; }
-                                Text { text: root.af_speed ? "АКТИВНО" : "ОТКЛЮЧЕНО"; color: root.af_speed ? #00F0FF : #64748B; font-weight: 700; font-size: 12px; y: 6px; }
+                                Text { text: "Микро-ускорение видео (1.01x – 1.04x)"; font-size: 13px; color: #FFFFFF; vertical-alignment: center; }
+                                Text { text: root.af_speed ? "АКТИВНО" : "ОТКЛЮЧЕНО"; color: root.af_speed ? #FFFFFF : #52525B; font-weight: 700; font-size: 12px; vertical-alignment: center; }
                             }
                         }
 
                         Rectangle {
-                            height: 60px;
-                            background: #141829;
+                            height: 56px;
+                            background: #141416;
                             border-radius: 8px;
-                            padding: 14px;
+                            border-width: 1px;
+                            border-color: #27272A;
                             HorizontalLayout {
+                                padding-left: 16px;
+                                padding-right: 16px;
                                 alignment: space-between;
-                                Text { text: "🎵 Сдвиг аудио-питча (Pitch Jitter)"; font-size: 13px; color: #FFFFFF; y: 6px; }
-                                Text { text: root.af_pitch ? "АКТИВНО" : "ОТКЛЮЧЕНО"; color: root.af_pitch ? #00F0FF : #64748B; font-weight: 700; font-size: 12px; y: 6px; }
+                                Text { text: "Сдвиг аудио-питча (Pitch Jitter)"; font-size: 13px; color: #FFFFFF; vertical-alignment: center; }
+                                Text { text: root.af_pitch ? "АКТИВНО" : "ОТКЛЮЧЕНО"; color: root.af_pitch ? #FFFFFF : #52525B; font-weight: 700; font-size: 12px; vertical-alignment: center; }
                             }
                         }
 
                         Rectangle {
-                            height: 60px;
-                            background: #141829;
+                            height: 56px;
+                            background: #141416;
                             border-radius: 8px;
-                            padding: 14px;
+                            border-width: 1px;
+                            border-color: #27272A;
                             HorizontalLayout {
+                                padding-left: 16px;
+                                padding-right: 16px;
                                 alignment: space-between;
-                                Text { text: "🔍 Микро-зум и случайный кроп (2-4%)"; font-size: 13px; color: #FFFFFF; y: 6px; }
-                                Text { text: root.af_zoom ? "АКТИВНО" : "ОТКЛЮЧЕНО"; color: root.af_zoom ? #00F0FF : #64748B; font-weight: 700; font-size: 12px; y: 6px; }
+                                Text { text: "Микро-зум и случайный кроп (2-4%)"; font-size: 13px; color: #FFFFFF; vertical-alignment: center; }
+                                Text { text: root.af_zoom ? "АКТИВНО" : "ОТКЛЮЧЕНО"; color: root.af_zoom ? #FFFFFF : #52525B; font-weight: 700; font-size: 12px; vertical-alignment: center; }
                             }
                         }
 
                         Rectangle {
-                            height: 60px;
-                            background: #141829;
+                            height: 56px;
+                            background: #141416;
                             border-radius: 8px;
-                            padding: 14px;
+                            border-width: 1px;
+                            border-color: #27272A;
                             HorizontalLayout {
+                                padding-left: 16px;
+                                padding-right: 16px;
                                 alignment: space-between;
-                                Text { text: "📺 Добавление легкого цифрового шума (Grain)"; font-size: 13px; color: #FFFFFF; y: 6px; }
-                                Text { text: root.af_grain ? "АКТИВНО" : "ОТКЛЮЧЕНО"; color: root.af_grain ? #00F0FF : #64748B; font-weight: 700; font-size: 12px; y: 6px; }
+                                Text { text: "Добавление легкого цифрового шума (Grain)"; font-size: 13px; color: #FFFFFF; vertical-alignment: center; }
+                                Text { text: root.af_grain ? "АКТИВНО" : "ОТКЛЮЧЕНО"; color: root.af_grain ? #FFFFFF : #52525B; font-weight: 700; font-size: 12px; vertical-alignment: center; }
                             }
                         }
 
                         Rectangle {
-                            height: 60px;
-                            background: #141829;
+                            height: 56px;
+                            background: #141416;
                             border-radius: 8px;
-                            padding: 14px;
+                            border-width: 1px;
+                            border-color: #27272A;
                             HorizontalLayout {
+                                padding-left: 16px;
+                                padding-right: 16px;
                                 alignment: space-between;
-                                Text { text: "🧹 Полная очистка метаданных (-map_metadata -1)"; font-size: 13px; color: #FFFFFF; y: 6px; }
-                                Text { text: root.af_metadata ? "АКТИВНО" : "ОТКЛЮЧЕНО"; color: root.af_metadata ? #00F0FF : #64748B; font-weight: 700; font-size: 12px; y: 6px; }
+                                Text { text: "Полная очистка метаданных (-map_metadata -1)"; font-size: 13px; color: #FFFFFF; vertical-alignment: center; }
+                                Text { text: root.af_metadata ? "АКТИВНО" : "ОТКЛЮЧЕНО"; color: root.af_metadata ? #FFFFFF : #52525B; font-weight: 700; font-size: 12px; vertical-alignment: center; }
                             }
                         }
                     }
@@ -604,18 +643,18 @@ export component AppWindow inherits Window {
                     Text { text: "Консоль событий и рендеринга"; font-size: 20px; font-weight: 700; color: #FFFFFF; }
 
                     Rectangle {
-                        background: #06080F;
+                        background: #09090B;
                         border-radius: 8px;
                         border-width: 1px;
-                        border-color: #1A213B;
+                        border-color: #27272A;
                         ScrollView {
                             VerticalLayout {
                                 padding: 12px;
                                 spacing: 8px;
                                 for item in root.logs: HorizontalLayout {
                                     spacing: 10px;
-                                    Text { text: item.time; font-size: 11px; color: #64748B; width: 70px; }
-                                    Text { text: item.message; font-size: 11px; color: #00F0FF; }
+                                    Text { text: item.time; font-size: 11px; color: #71717A; width: 70px; }
+                                    Text { text: item.message; font-size: 11px; color: #FAFAFA; }
                                 }
                             }
                         }

@@ -22,7 +22,7 @@ pub struct Translation {
 impl Default for Translation {
     fn default() -> Self {
         Self {
-            app_title: "QSnap • Viral Split-Screen Video Studio".to_string(),
+            app_title: "QSnap - Split-Screen Video Studio".to_string(),
             tab_templates: "Шаблоны".to_string(),
             tab_media: "Медиатека".to_string(),
             tab_antifraud: "Антифрод".to_string(),

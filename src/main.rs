@@ -80,13 +80,13 @@ async fn main() -> anyhow::Result<()> {
         let clips_count = ui.get_clips_count() as usize;
 
         if source_path_str.trim().is_empty() {
-            ui.set_status_text("⚠️ Ошибка: выберите исходный видеофайл!".into());
+            ui.set_status_text("Ошибка: выберите исходный видеофайл".into());
             return;
         }
 
         let main_path = PathBuf::from(source_path_str);
         if !main_path.exists() {
-            ui.set_status_text("⚠️ Файл не найден на диске!".into());
+            ui.set_status_text("Файл не найден на диске".into());
             return;
         }
 
@@ -181,7 +181,7 @@ async fn main() -> anyhow::Result<()> {
                     ui.set_is_rendering(false);
                     ui.set_progress_percent(1.0);
                     ui.set_status_text(
-                        format!("🎉 Готово! Все клипы сохранены в {}", output_dir.display()).into(),
+                        format!("Готово. Все клипы сохранены в {}", output_dir.display()).into(),
                     );
                 }
             });
